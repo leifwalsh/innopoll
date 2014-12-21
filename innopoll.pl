@@ -88,6 +88,9 @@ my @headers =
 
 $tsv->print(\*STDOUT, \@headers);
 
+# enable autoflush
+$| = 1;
+
 my @vals = my ($timestamp,
 
                $ib_size, $ib_free_len, $ib_seg_size, $ib_merges,
