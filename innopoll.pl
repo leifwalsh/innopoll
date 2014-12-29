@@ -84,6 +84,20 @@ my @headers =
 
       ro_inserts ro_updates ro_deletes ro_reads
       ro_inserts_ps ro_updates_ps ro_deletes_ps ro_reads_ps
+
+      bp_mem_alloc bp_mem_addl
+      bp_dict_mem_alloc
+      bp_size
+      bp_free
+      bp_db_pages
+      bp_db_pages_old
+      bp_db_pages_dirty
+      bp_pending_reads
+      bp_pending_writes_lru bp_pending_writes_flush bp_pending_writes_single
+      bp_made_young bp_made_not_young
+      bp_made_young_ps bp_made_not_young_ps
+      bp_reads bp_creates bp_writes
+      bp_reads_ps bp_creates_ps bp_writes_ps
    );
 
 $tsv->print(\*STDOUT, \@headers);
@@ -101,7 +115,21 @@ my @vals = my ($timestamp,
                $io_rd_per_sec, $io_bytes_per_rd, $io_wr_per_sec, $io_sync_per_sec,
 
                $ro_inserts, $ro_updates, $ro_deletes, $ro_reads,
-               $ro_inserts_ps, $ro_updates_ps, $ro_deletes_ps, $ro_reads_ps);
+               $ro_inserts_ps, $ro_updates_ps, $ro_deletes_ps, $ro_reads_ps,
+
+               $bp_mem_alloc, $bp_mem_addl,
+               $bp_dict_mem_alloc,
+               $bp_size,
+               $bp_free,
+               $bp_db_pages,
+               $bp_db_pages_old,
+               $bp_db_pages_dirty,
+               $bp_pending_reads,
+               $bp_pending_writes_lru, $bp_pending_writes_flush, $bp_pending_writes_single,
+               $bp_made_young, $bp_made_not_young,
+               $bp_made_young_ps, $bp_made_not_young_ps,
+               $bp_reads, $bp_creates, $bp_writes,
+               $bp_reads_ps, $bp_creates_ps, $bp_writes_ps);
 
 $tsv->bind_columns(\$timestamp,
 
@@ -113,7 +141,21 @@ $tsv->bind_columns(\$timestamp,
                    \$io_rd_per_sec, \$io_bytes_per_rd, \$io_wr_per_sec, \$io_sync_per_sec,
 
                    \$ro_inserts, \$ro_updates, \$ro_deletes, \$ro_reads,
-                   \$ro_inserts_ps, \$ro_updates_ps, \$ro_deletes_ps, \$ro_reads_ps);
+                   \$ro_inserts_ps, \$ro_updates_ps, \$ro_deletes_ps, \$ro_reads_ps,
+
+                   \$bp_mem_alloc, \$bp_mem_addl,
+                   \$bp_dict_mem_alloc,
+                   \$bp_size,
+                   \$bp_free,
+                   \$bp_db_pages,
+                   \$bp_db_pages_old,
+                   \$bp_db_pages_dirty,
+                   \$bp_pending_reads,
+                   \$bp_pending_writes_lru, \$bp_pending_writes_flush, \$bp_pending_writes_single,
+                   \$bp_made_young, \$bp_made_not_young,
+                   \$bp_made_young_ps, \$bp_made_not_young_ps,
+                   \$bp_reads, \$bp_creates, \$bp_writes,
+                   \$bp_reads_ps, \$bp_creates_ps, \$bp_writes_ps);
 
 do {
   my $text  = $dbh->selectall_arrayref($query)->[0]->[2];
@@ -152,6 +194,35 @@ $f reads\/s, $d avg bytes\/read, $f writes\/s, $f fsyncs\/s/m;
      $ro_text =~ m/Number of rows inserted $d, updated $d, deleted $d, read $d
 $f inserts\/s, $f updates\/s, $f deletes\/s, $f reads\/s/m;
   print STDERR join(", ", @ro_data), $/, $/ if $debug;
+
+  my ($bp_text) = $text =~ m/BUFFER POOL AND MEMORY\n-*\n(.*\n.*\n.*\n.*\n.*\n.*\n.*\n.*\n.*\n.*\n.*\n.*\n.*\n)/m;
+  ($bp_mem_alloc, $bp_mem_addl,
+   $bp_dict_mem_alloc,
+   $bp_size,
+   $bp_free,
+   $bp_db_pages,
+   $bp_db_pages_old,
+   $bp_db_pages_dirty,
+   $bp_pending_reads,
+   $bp_pending_writes_lru, $bp_pending_writes_flush, $bp_pending_writes_single,
+   $bp_made_young, $bp_made_not_young,
+   $bp_made_young_ps, $bp_made_not_young_ps,
+   $bp_reads, $bp_creates, $bp_writes,
+   $bp_reads_ps, $bp_creates_ps, $bp_writes_ps) = my @bp_data =
+     $bp_text =~ m/Total memory allocated $d; in additional pool allocated $d
+Dictionary memory allocated\s+$d
+Buffer pool size\s+$d
+Free buffers\s+$d
+Database pages\s+$d
+Old database pages\s+$d
+Modified db pages\s+$d
+Pending reads\s+$d
+Pending writes: LRU $d, flush list $d, single page $d
+Pages made young $d, not young $d
+$f youngs\/s, $f non-youngs\/s
+Pages read $d, created $d, written $d
+$f reads\/s, $f creates\/s, $f writes\/s/m;
+  print STDERR join(", ", @bp_data), $/, $/ if $debug;
 
   $tsv->print(\*STDOUT, undef);
 } while (sleep $period);
