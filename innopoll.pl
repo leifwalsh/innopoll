@@ -138,10 +138,11 @@ discarded operations:
  insert $d, delete mark $d, delete $d/m;
   print STDERR join(", ", @ib_data), $/, $/ if $debug;
 
-  my ($io_text) = $text =~ m/FILE I\/O\n-*\n(?:I\/O thread \d+ state:.*\n)*.*\n.*\n.*\n(.*\n.*\n)/m;
+  my ($io_text) = $text =~ m/FILE I\/O\n-*\n(?:I\/O thread \d+ state:.*\n)*.*\n.*\n.*\n(.*\n(?:\d+ pending preads, \d+ pending pwrites\n)?.*\n)/m;
   ($io_rd_num, $io_wr_num, $io_sync_num,
    $io_rd_per_sec, $io_bytes_per_rd, $io_wr_per_sec, $io_sync_per_sec) = my @io_data = 
-     $io_text =~ m/$d OS file reads, $d OS file writes, $d OS fsyncs
+     $io_text =~ m/$d OS file reads, $d OS file writes, $d OS fsyncs(?:
+\d+ pending preads, \d+ pending pwrites)?
 $f reads\/s, $d avg bytes\/read, $f writes\/s, $f fsyncs\/s/m;
   print STDERR join(", ", @io_data), $/, $/ if $debug;
 
